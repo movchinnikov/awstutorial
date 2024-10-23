@@ -8,8 +8,7 @@ resource "aws_key_pair" "generated_key" {
   public_key = tls_private_key.private_key.public_key_openssh
 
   provisioner "local-exec" {
-    command = "echo '${tls_private_key.private_key.private_key_pem}' > ~/.ssh/${var.prefix}-pem.pem && chmod 400 ~/.ssh/${var.prefix}-pem.pem"
-    
+    command = "echo '${tls_private_key.private_key.private_key_pem}' > ~/.ssh/${var.prefix}-pem.pem && chmod 500 ~/.ssh/${var.prefix}-pem.pem"
   }
 }
 
