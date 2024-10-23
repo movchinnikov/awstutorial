@@ -1,6 +1,7 @@
 resource "aws_security_group" "sg" {
-  name = "${var.prefix}_sg_ssh_http_s"
-  description = "Allow SSH and HTTP/HTTPS access"
+  name = "${var.prefix}_instance_sg"
+  description = "Allow traffic only from Load Balancer and SSH"
+  vpc_id = var.vpc_id
 
   ingress {
     from_port = 22
@@ -13,14 +14,14 @@ resource "aws_security_group" "sg" {
     from_port = 80
     to_port = 80
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Allowing HTTP access from anywhere
+    security_groups = [aws_security_group.lb_sg.id]
   }
 
   ingress {
     from_port = 443
     to_port = 443
     protocol = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # Allowing HTTPS access from anywhere
+    security_groups = [aws_security_group.lb_sg.id]
   }
 
   egress {
@@ -28,9 +29,5 @@ resource "aws_security_group" "sg" {
     to_port = 0
     protocol = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.prefix}-sg"
   }
 }

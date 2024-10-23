@@ -13,7 +13,7 @@ resource "aws_key_pair" "generated_key" {
   }
 }
 
-data "aws_ami" "amazon_linux" {
+data "aws_ami" "ami_amazon_linux" {
   most_recent = true
 
   filter {
@@ -29,7 +29,7 @@ data "aws_ami" "amazon_linux" {
   owners = ["${var.ami_owner}"] # Amazon
 }
 
-data "aws_subnet" "public_subnet_az_a" {
+data "aws_subnets" "public_subnets" {
   filter {
     name = "vpc-id"
     values = ["${var.vpc_id}"]
@@ -37,19 +37,6 @@ data "aws_subnet" "public_subnet_az_a" {
 
   filter {
     name = "availability-zone"
-    values = ["${var.region}${var.availability_zone}"]
-  }
-}
-
-resource "aws_instance" "my_first_instance" {
-  ami = data.aws_ami.amazon_linux.id
-  instance_type = "${var.instance_type}"
-  subnet_id = data.aws_subnet.public_subnet_az_a.id
-  key_name = aws_key_pair.generated_key.key_name
-  security_groups = [aws_security_group.sg.id]
-  user_data = file("${path.module}/user_data.sh")
-  
-  tags = {
-    Name = "${var.prefix}-first-instance"
+    values = ["${var.region}a", "${var.region}b"]
   }
 }
