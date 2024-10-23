@@ -1,6 +1,13 @@
-resource "aws_security_group" "sg_allow_http_https" {
-  name = "${var.prefix}_sg"
-  description = "Allow HTTP/HTTPS access"
+resource "aws_security_group" "sg" {
+  name = "${var.prefix}_sg_ssh_http_s"
+  description = "Allow SSH and HTTP/HTTPS access"
+
+  ingress {
+    from_port = 22
+    to_port = 22
+    protocol = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]  # Allowing SSH access from anywhere
+  }
 
   ingress {
     from_port = 80
