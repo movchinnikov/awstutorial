@@ -2,12 +2,16 @@ resource "aws_launch_template" "launch_template" {
     name = "${var.prefix}-launch-template"
     image_id = data.aws_ami.ami_amazon_linux.id
     instance_type = "${var.instance_type}"
-    user_data = base64encode(file("${path.module}/user_data.sh"))
     key_name = aws_key_pair.generated_key.key_name
         network_interfaces {
         security_groups = [aws_security_group.sg.id]
         associate_public_ip_address = true
     }
+    user_data = base64encode(
+        templatefile("user_data.sh", {
+            DB_HOST = data.aws_db_instance.postgres_rds.endpoint
+        })
+    )
 }
 
 resource "aws_autoscaling_group" "asg" {

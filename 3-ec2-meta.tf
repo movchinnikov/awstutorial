@@ -39,3 +39,7 @@ data "aws_subnets" "public_subnets" {
     values = ["${var.region}a", "${var.region}b"]
   }
 }
+
+data "aws_db_instance" "postgres_rds" {
+  db_instance_identifier = "${var.prefix}-postgres-rds"
+}
