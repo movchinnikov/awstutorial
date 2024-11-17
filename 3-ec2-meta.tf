@@ -36,10 +36,10 @@ data "aws_subnets" "public_subnets" {
 
   filter {
     name = "availability-zone"
-    values = ["${var.region}a", "${var.region}b"]
+    values = ["${var.region}a", "${var.region}b", "${var.region}d"]
   }
 }
 
-data "aws_db_instance" "postgres_rds" {
-  db_instance_identifier = "${var.prefix}-postgres-rds"
+data "aws_rds_cluster" "postgres_cluster" {
+  cluster_identifier = "${var.prefix}-rds-cluster"
 }

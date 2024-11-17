@@ -21,9 +21,3 @@ variable "prefix" {
   type = string
   default = "maxov" #replace on your own
 }
-
-variable "instance_type" {
-  description = "The type of RDS instance used to create the instance."
-  type = string
-  default = "db.t3.micro"
-}

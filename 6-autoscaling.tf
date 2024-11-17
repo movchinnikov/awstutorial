@@ -9,9 +9,10 @@ resource "aws_launch_template" "launch_template" {
     }
     user_data = base64encode(
         templatefile("user_data.sh", {
-            DB_HOST = data.aws_db_instance.postgres_rds.endpoint
+            DB_HOST = data.aws_rds_cluster.postgres_cluster.endpoint
         })
     )
+    depends_on = [ data.aws_rds_cluster.postgres_cluster ]
 }
 
 resource "aws_autoscaling_group" "asg" {
@@ -33,6 +34,8 @@ resource "aws_autoscaling_group" "asg" {
 
     health_check_type = "EC2"
     health_check_grace_period = 300
+
+    depends_on = [ data.aws_rds_cluster.postgres_cluster ]
 }
 
 resource "aws_autoscaling_policy" "scale_out" {

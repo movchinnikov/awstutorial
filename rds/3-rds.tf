@@ -1,8 +1,8 @@
-data "aws_rds_orderable_db_instance" "custom_pgsql" {
-  engine = "postgres"
-  storage_type = "gp3"
-  preferred_instance_classes = [var.instance_type]
-  license_model = "postgresql-license"
+//aws rds describe-orderable-db-instance-options --engine aurora-postgresql --query "OrderableDBInstanceOptions[*].{Version:EngineVersion,Class:DBInstanceClass}" --output table
+data "aws_rds_orderable_db_instance" "aurora_postgresql" {
+  engine = "aurora-postgresql"
+  engine_version = "14.5"
+  instance_class = "db.t3.medium"
 }
 
 resource "aws_db_subnet_group" "postgres_rds_subnet_group" {
@@ -11,22 +11,46 @@ resource "aws_db_subnet_group" "postgres_rds_subnet_group" {
   description = "RDS subnet group for PostgreSQL"
 }
 
-resource "aws_db_instance" "postgres_rds" {
-  identifier = "${var.prefix}-postgres-rds"
-  engine = data.aws_rds_orderable_db_instance.custom_pgsql.engine
-  instance_class = "db.t3.micro"
-  storage_type = data.aws_rds_orderable_db_instance.custom_pgsql.storage_type
-  allocated_storage = 20
-  db_name = "${var.prefix}DB"
-  username = "test"
-  password = "admin123"
-  publicly_accessible = true
+resource "aws_rds_cluster" "postgres_cluster" {
+  cluster_identifier = "${var.prefix}-rds-cluster"
+  engine = data.aws_rds_orderable_db_instance.aurora_postgresql.engine
+  engine_version = data.aws_rds_orderable_db_instance.aurora_postgresql.engine_version
+  master_username = "test"
+  master_password = "admin123"
+  database_name = "${var.prefix}DB"
   skip_final_snapshot = true
-  db_subnet_group_name = aws_db_subnet_group.postgres_rds_subnet_group.name
   vpc_security_group_ids = [aws_security_group.postgres_sg.id]
-  storage_encrypted = true
-  multi_az = true
-  license_model = data.aws_rds_orderable_db_instance.custom_pgsql.license_model
+  db_subnet_group_name = aws_db_subnet_group.postgres_rds_subnet_group.name
+  availability_zones = ["${var.region}a", "${var.region}b", "${var.region}d"]
+  backup_retention_period = 7
+
+  tags = {
+    Name = "${var.prefix}-rds-cluster"
+  }
+}
+
+resource "aws_rds_cluster_instance" "master_instance" {
+  identifier = "${var.prefix}-rds-cluster-master"
+  cluster_identifier = aws_rds_cluster.postgres_cluster.id
+  instance_class = data.aws_rds_orderable_db_instance.aurora_postgresql.instance_class
+  engine = data.aws_rds_orderable_db_instance.aurora_postgresql.engine
+  engine_version = data.aws_rds_orderable_db_instance.aurora_postgresql.engine_version
+
+  tags = {
+    Name = "${var.prefix}-rds-cluster-master"
+  }
+}
+
+resource "aws_rds_cluster_instance" "replica_instance" {
+  identifier = "${var.prefix}-rds-cluster-replica"
+  cluster_identifier = aws_rds_cluster.postgres_cluster.id
+  instance_class = data.aws_rds_orderable_db_instance.aurora_postgresql.instance_class
+  engine = data.aws_rds_orderable_db_instance.aurora_postgresql.engine
+  engine_version = data.aws_rds_orderable_db_instance.aurora_postgresql.engine_version
+
+  tags = {
+    Name = "${var.prefix}-rds-cluster-replica"
+  }
 }
 
 resource "aws_security_group" "postgres_sg" {
@@ -47,7 +71,17 @@ resource "aws_security_group" "postgres_sg" {
   }
 }
 
-output "postgres_endpoint" {
-  description = "The public endpoint for postgres."
-  value = aws_db_instance.postgres_rds.endpoint
+output "rds_cluster_endpoint" {
+  description = "Endpoint of the PostgreSQL RDS cluster"
+  value       = aws_rds_cluster.postgres_cluster.endpoint
+}
+
+output "rds_cluster_reader_endpoint" {
+  description = "Reader endpoint of the PostgreSQL RDS cluster"
+  value       = aws_rds_cluster.postgres_cluster.reader_endpoint
+}
+
+output "rds_cluster_storage_type" {
+  description = "Reader endpoint of the PostgreSQL RDS cluster"
+  value       = aws_rds_cluster.postgres_cluster.storage_type
 }

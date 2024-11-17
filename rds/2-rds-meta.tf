@@ -6,6 +6,6 @@ data "aws_subnets" "public_subnets" {
 
   filter {
     name = "availability-zone"
-    values = ["${var.region}a", "${var.region}b"]
+    values = ["${var.region}a", "${var.region}b", "${var.region}d"]
   }
 }

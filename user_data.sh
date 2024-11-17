@@ -2,7 +2,10 @@
 DB_USER="test"
 DB_PASSWORD="admin123"
 DB_NAME="maxovDB"
-RDS_IP=$(nslookup "maxov-postgres-rds.czswoaei837e.us-east-1.rds.amazonaws.com" | awk '/^Address: / { print $2 }')
+
+echo "| $DB_HOST |"  | sudo tee /var/log/maksov.log
+RDS_IP=$(nslookup "$DB_HOST" | awk '/^Address: / { print $2 }')
+echo "| $RDS_IP |"  | sudo tee -a /var/log/maksov.log
 
 # Update packages and install necessary tools: Apache (httpd) and PostgreSQL client
 sudo dnf update -y
